@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Crop Tool</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group input {
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: calc(100% - 22px);
+            /* Adjust width to account for padding */
+        }
+
+        .button-group {
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin-right: 10px;
+            cursor: pointer;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .images-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #image-container {
+            position: relative;
+            width: 48%;
+            height: auto;
+            border: 1px solid #ddd;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        #image {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        #crop-circle {
+            position: absolute;
+            border: 2px dashed red;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        #cropped-image {
+            display: block;
+            max-width: 48%;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="input-group">
+            <input type="text" id="image-url" placeholder="Enter Image URL">
+            <input type="text" id="crop-string" placeholder="Enter Crop String (e.g., 'r: 0.45, cX: 0.5, cY: 0.33')">
+        </div>
+        <div class="button-group">
+            <button onclick="visualizeCrop()">Visualize Crop</button>
+            <button onclick="cropImage()">Crop Image</button>
+        </div>
+        <div class="images-container">
+            <div id="image-container">
+                <img id="image" src="" alt="Image" onload="drawCropCircle()">
+                <div id="crop-circle"></div>
+            </div>
+            <canvas id="cropped-image"></canvas>
+        </div>
+    </div>
+
+    <script>
+        function parseCropString(cropString) {
+            const params = cropString.split(',').reduce((acc, item) => {
+                const [key, value] = item.trim().split(':');
+                acc[key.trim()] = parseFloat(value.trim());
+                return acc;
+            }, {});
+
+            return {
+                r: params.r || 0.5,
+                cX: params.cX || 0.5,
+                cY: params.cY || 0.5
+            };
+        }
+
+        function visualizeCrop() {
+            const imageUrl = document.getElementById('image-url').value;
+            const cropString = document.getElementById('crop-string').value;
+
+            if (!imageUrl || !cropString) {
+                alert('Please enter both the image URL and crop string.');
+                return;
+            }
+
+            const image = document.getElementById('image');
+            image.src = imageUrl;
+
+            image.onload = function () {
+                drawCropCircle();
+            };
+        }
+
+        function drawCropCircle() {
+            const cropString = document.getElementById('crop-string').value;
+            if (!cropString) return;
+
+            const { r, cX, cY } = parseCropString(cropString);
+            const image = document.getElementById('image');
+            const cropCircle = document.getElementById('crop-circle');
+
+            const imageWidth = image.width;
+            const imageHeight = image.height;
+
+            const radius = r * imageWidth;
+            const centerX = cX * imageWidth;
+            const centerY = imageHeight - (cY * imageHeight);
+
+            cropCircle.style.width = `${radius * 2}px`;
+            cropCircle.style.height = `${radius * 2}px`;
+            cropCircle.style.left = `${centerX - radius}px`;
+            cropCircle.style.top = `${centerY - radius}px`;
+        }
+
+        function cropImage() {
+            const image = document.getElementById('image');
+            const cropString = document.getElementById('crop-string').value;
+            const { r, cX, cY } = parseCropString(cropString);
+
+            const imageWidth = image.naturalWidth;
+            const imageHeight = image.naturalHeight;
+
+            const canvas = document.getElementById('cropped-image');
+            const ctx = canvas.getContext('2d');
+
+            const radius = r * imageWidth;
+            const centerX = cX * imageWidth;
+            const centerY = imageHeight - (cY * imageHeight);
+
+            canvas.width = radius * 2;
+            canvas.height = radius * 2;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.beginPath();
+            ctx.arc(radius, radius, radius, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.clip();
+
+
+            ctx.drawImage(
+                image,
+                centerX - radius,
+                centerY - radius,
+                radius * 2,
+                radius * 2,
+                0,
+                0,
+                radius * 2,
+                radius * 2
+            );
+        }
+    </script>
+</body>
+
+</html>
