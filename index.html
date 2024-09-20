@@ -158,7 +158,7 @@
 
             const radius = r * imageWidth;
             const centerX = cX * imageWidth;
-            const centerY = imageHeight - (cY * imageHeight);
+            const centerY = cY * imageHeight;
 
             cropCircle.style.width = `${radius * 2}px`;
             cropCircle.style.height = `${radius * 2}px`;
@@ -179,7 +179,7 @@
 
             const radius = r * imageWidth;
             const centerX = cX * imageWidth;
-            const centerY = imageHeight - (cY * imageHeight);
+            const centerY = cY * imageHeight;
 
             canvas.width = radius * 2;
             canvas.height = radius * 2;
